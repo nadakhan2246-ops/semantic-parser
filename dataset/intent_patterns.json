@@ -1,0 +1,44 @@
+{
+  "GREETING": {
+    "patterns": [
+      "\\b(hello|hi|hey|namaste|good (morning|afternoon|evening))\\b",
+      "how are you"
+    ],
+    "description": "greeting the assistant"
+  },
+  "GET_WEATHER": {
+    "patterns": [
+      "\\b(weather|temperature|forecast|rain(ing|y)?|humidity)\\b"
+    ],
+    "description": "asking about the weather"
+  },
+  "BOOK_HOTEL": {
+    "patterns": [
+      "\\b(book|reserve)\\b",
+      "\\b(hotel|room|stay)\\b"
+    ],
+    "description": "booking a hotel"
+  },
+  "BOOK_TRANSPORT": {
+    "patterns": [
+      "\\b(book|reserve)\\b",
+      "\\b(ticket|train|flight|bus|taxi|cab)\\b"
+    ],
+    "description": "booking a travel ticket"
+  },
+  "SEARCH_INFO": {
+    "patterns": [
+      "\\b(find|search|look up|lookup)\\b",
+      "\\binformation (about|on)\\b",
+      "\\b(tell me|know|learn) about\\b"
+    ],
+    "description": "searching for information"
+  },
+  "GENERAL_QUESTION": {
+    "patterns": [
+      "^(who|what|when|where|why|which|how)\\b",
+      "\\?$"
+    ],
+    "description": "asking a general question"
+  }
+}

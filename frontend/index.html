@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Semantic Parser: an NLP application that converts English sentences into structured semantic output.">
+<title>Semantic Parser | Natural Language Understanding</title>
+<link rel="icon" type="image/svg+xml" href="/static/assets/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <a class="brand" href="#/home"><img src="/static/assets/logo.svg" alt="" width="28" height="28"><span>Semantic Parser</span></a>
+  <button class="menu-btn" id="menuBtn" type="button" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks"><span></span><span></span><span></span></button>
+  <nav id="navLinks" aria-label="Main navigation">
+    <a href="#/home" data-route="home">Home</a>
+    <a href="#/analyzer" data-route="analyzer">Analyzer</a>
+    <a href="#/pipeline" data-route="pipeline">Pipeline</a>
+    <a href="#/playground" data-route="playground">Playground</a>
+    <a href="#/history" data-route="history">History</a>
+  </nav>
+</header>
+
+<main id="main" tabindex="-1">
+
+<!-- ============ HOME ============ -->
+<section class="view" id="view-home" data-view="home" hidden>
+  <div class="hero">
+    <div class="hero-copy">
+      <h1>Semantic Parser</h1>
+      <p class="hero-sub">A natural language understanding system that reads an English sentence and returns its meaning as structured data: the intent, the entities and the relations between them.</p>
+      <div class="hero-actions">
+        <a class="btn primary lg" id="startBtn" href="#/analyzer">Start Analyzing</a>
+        <a class="btn ghost lg" href="#/pipeline">View the pipeline</a>
+      </div>
+    </div>
+    <aside class="hero-demo" aria-label="Example of input and output">
+      <div class="demo-head">Example</div>
+      <div class="demo-block"><span class="demo-label">Input</span><p>Book a train ticket to Chennai tomorrow.</p></div>
+      <div class="demo-block"><span class="demo-label">Output</span>
+<pre>{
+  "intent": "BOOK_TRANSPORT",
+  "action": "book",
+  "object": "train ticket",
+  "destination": "Chennai",
+  "date": "tomorrow"
+}</pre></div>
+    </aside>
+  </div>
+
+  <ul class="stats" aria-label="Project statistics">
+    <li class="stat"><b>8</b><span>Pipeline stages</span></li>
+    <li class="stat"><b>6</b><span>Supported intents</span></li>
+    <li class="stat"><b>4</b><span>Entity types</span></li>
+    <li class="stat"><b id="statHistory">0</b><span>Saved analyses</span></li>
+  </ul>
+
+  <div class="split">
+    <article class="card">
+      <h2 class="h3">What is semantic parsing?</h2>
+      <p>Semantic parsing maps a sentence written in natural language to a formal representation that a program can execute. Instead of matching keywords, it identifies who or what the sentence is about, which action is requested and which details (places, dates, objects) complete the request.</p>
+      <p>This project uses a rule-based approach: a verb lexicon, gazetteers for places, dates and objects, and weighted regular-expression patterns for intent. A weak match is reported as <code>UNKNOWN</code> rather than guessed.</p>
+    </article>
+    <article class="card">
+      <h2 class="h3">Project purpose</h2>
+      <p>Assistants, search engines and chatbots need meaning, not just words. This application demonstrates how each processing stage contributes to that meaning and makes every intermediate result visible, so the full analysis can be inspected and explained.</p>
+      <p class="muted">Technology: Python, Flask, NLTK, SQLite, HTML, CSS and JavaScript.</p>
+    </article>
+  </div>
+
+  <div class="section-head"><h2>NLP pipeline overview</h2><a class="text-link" href="#/pipeline">Stage details</a></div>
+  <ol class="mini-flow" id="homeFlow" aria-label="Pipeline overview"></ol>
+</section>
+
+<!-- ============ ANALYZER ============ -->
+<section class="view" id="view-analyzer" data-view="analyzer" hidden>
+  <header class="page-head">
+    <h1 class="h2">Sentence Analyzer</h1>
+    <p class="lead">Enter a sentence to run it through the complete pipeline. All results below are computed by the Flask backend.</p>
+  </header>
+
+  <div class="card input-card">
+    <label for="textInput" class="field-label">Input sentence</label>
+    <textarea id="textInput" rows="4" maxlength="500" placeholder="Example: Book a train ticket to Chennai tomorrow."></textarea>
+    <div class="field-foot"><span id="charCount">0 / 500</span><span class="hint">Enter to analyze. Shift+Enter for a new line.</span></div>
+    <div class="actions">
+      <button class="btn primary" id="analyzeBtn" type="button"><span class="btn-label">Analyze Sentence</span></button>
+      <button class="btn ghost" id="clearBtn" type="button">Clear Input</button>
+      <div class="status" id="status" data-state="idle" role="status" aria-live="polite"><i class="dot"></i><span id="statusText">Ready</span></div>
+    </div>
+    <p class="error" id="error" role="alert" hidden></p>
+    <div class="chips-row"><span class="chips-label">Quick examples</span><div class="chips" id="exampleChips"></div></div>
+  </div>
+
+  <div id="results" hidden>
+    <div class="results-head">
+      <h2 class="h3">Analysis results</h2>
+      <span class="muted" id="resultMeta"></span>
+    </div>
+    <ol class="mini-flow" id="liveFlow" aria-label="Processing stages for this sentence"></ol>
+
+    <div class="grid">
+      <article class="card"><h3 class="card-title"><span class="idx">1</span>Original Sentence</h3><p id="rOriginal" class="value"></p></article>
+      <article class="card"><h3 class="card-title"><span class="idx">2</span>Preprocessed Text</h3><p id="rPre" class="value mono"></p><div id="rFixes" class="fixes"></div></article>
+      <article class="card wide"><h3 class="card-title"><span class="idx">3</span>Tokens <small id="rTokCount"></small></h3><div class="chips" id="rTokens"></div></article>
+      <article class="card wide"><h3 class="card-title"><span class="idx">4</span>Semantic Parsing</h3><div id="rParse"></div></article>
+      <article class="card"><h3 class="card-title"><span class="idx">5</span>Extracted Entities</h3><div id="rEntities"></div></article>
+      <article class="card"><h3 class="card-title"><span class="idx">6</span>Intent Classification</h3><div id="rIntent"></div></article>
+      <article class="card wide">
+        <div class="row"><h3 class="card-title"><span class="idx">7</span>Structured JSON Output</h3><button class="btn small ghost" id="copyBtn" type="button">Copy JSON</button></div>
+        <pre id="rJson" tabindex="0"></pre>
+      </article>
+      <article class="card wide"><h3 class="card-title"><span class="idx">8</span>Generated Explanation</h3><p id="rInterp" class="interp"></p><ul id="rNotes" class="notes"></ul></article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PIPELINE ============ -->
+<section class="view" id="view-pipeline" data-view="pipeline" hidden>
+  <header class="page-head">
+    <h1 class="h2">NLP Processing Pipeline</h1>
+    <p class="lead">Every sentence passes through the same eight stages. Each stage receives the output of the previous one and adds a layer of structure.</p>
+  </header>
+  <ol class="workflow" id="pipeline" aria-label="Eight NLP stages"></ol>
+  <div class="card io-card">
+    <h2 class="h3">From sentence to structure</h2>
+    <div class="io">
+      <div><span class="demo-label">Input</span><p class="value">Book a train ticket to Chennai tomorrow.</p></div>
+      <div class="io-arrow" aria-hidden="true">&rarr;</div>
+      <div><span class="demo-label">Structured output</span><pre>{ "intent": "BOOK_TRANSPORT", "action": "book",
+  "object": "train ticket",
+  "destination": "Chennai", "date": "tomorrow" }</pre></div>
+    </div>
+    <div class="actions"><a class="btn primary" href="#/analyzer">Try it in the Analyzer</a></div>
+  </div>
+</section>
+
+<!-- ============ PLAYGROUND ============ -->
+<section class="view" id="view-playground" data-view="playground" hidden>
+  <header class="page-head">
+    <h1 class="h2">Playground</h1>
+    <p class="lead">Select an example sentence. It opens in the Analyzer and is processed immediately.</p>
+  </header>
+  <div class="grid cards3" id="playgroundGrid"></div>
+</section>
+
+<!-- ============ HISTORY ============ -->
+<section class="view" id="view-history" data-view="history" hidden>
+  <header class="page-head row">
+    <div>
+      <h1 class="h2">Analysis History</h1>
+      <p class="lead">Every analysis is stored in the local SQLite database. Open any entry to view the full result.</p>
+    </div>
+    <button class="btn ghost" id="clearHistoryBtn" type="button">Clear History</button>
+  </header>
+  <div class="card table-card">
+    <div class="table-meta"><span id="historyCount">0 analyses</span><button class="btn small ghost" id="refreshHistoryBtn" type="button">Refresh</button></div>
+    <div class="table-wrap">
+      <table class="history-table">
+        <thead><tr><th scope="col">#</th><th scope="col">Original sentence</th><th scope="col">Intent</th><th scope="col">Timestamp</th><th scope="col"><span class="sr">Action</span></th></tr></thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+    <p class="empty" id="historyEmpty" hidden>No analyses yet. Analyze a sentence and it will be listed here.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <span class="foot-title">Semantic Parser</span>
+    <span class="muted">AI-Based Natural Language Understanding Using Semantic Parsing. Academic NLP project.</span>
+  </div>
+</footer>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<div class="modal" id="confirmModal" hidden role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+  <div class="modal-card">
+    <h3 id="confirmTitle">Clear all history?</h3>
+    <p>This permanently deletes every saved analysis from the database.</p>
+    <div class="actions end"><button class="btn ghost" id="confirmNo" type="button">Keep history</button><button class="btn primary" id="confirmYes" type="button">Clear history</button></div>
+  </div>
+</div>
+<script src="/static/script.js"></script>
+</body>
+</html>

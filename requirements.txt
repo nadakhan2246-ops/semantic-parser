@@ -1,0 +1,4 @@
+Flask>=3.0
+nltk>=3.8
+pytest>=8.0
+gunicorn>=21.2
